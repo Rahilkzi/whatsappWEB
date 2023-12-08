@@ -1,5 +1,5 @@
+const express = require('express');
 const axios = require('axios');
-const http = require('http');
 const fs = require('fs');
 const {
   Client,
@@ -7,6 +7,10 @@ const {
   MessageMedia,
 } = require('@rahilkazi/whatsapp-web.js');
 const SQLiteStore = require('./SQLiteStore');
+
+const app = express();
+
+app.set('view engine', 'ejs');
 
 // Function to handle sending messages
 async function sendMessage(message, content, image) {
@@ -62,8 +66,8 @@ const client = new Client({
     backupSyncIntervalMs: 300000,
   }),
   puppeteer: {
-    headless: "new",
-    args: ["--no-sandbox"]
+    headless: 'new',
+    args: ['--no-sandbox'],
   },
 });
 
@@ -98,19 +102,7 @@ client.on('ready', () => {
 
 client.on('remote_session_saved', () => {
   console.log('saved');
-}); 
-
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/html' });
-  const indexContent = fs.readFileSync('index.html', 'utf8');
-  // Replace [QR_CODE_DATA_URL] with the actual data URL
-  const updatedIndexContent = indexContent.replace(
-    '[QR_CODE_DATA_URL]',
-    qrCodeImage
-  );
-  res.end(updatedIndexContent);
 });
-
 
 client.on('message', async (message) => {
   message.getContact().then(async (chats) => {
@@ -143,8 +135,21 @@ client.on('message', async (message) => {
   });
 });
 
-const PORT = 3000;
-server.listen(PORT, () => console.log('Server is running on port ' + PORT));
-// server.listen(process.env.PORT, () =>
-  // console.log('Server is running on port ' + process.env.PORT)
-// );
+const PORT = process.env.PORT || 3000;
+
+// Serve the QR code on the root path
+app.get('/', async (req, res) => {
+  const exists = await store.sessionExists({ session: 'RemoteAuth' });
+  // Use the result as needed
+  if (exists) {
+    res.render('index', {
+      qr: '',
+      hide: 'hidden',
+      errmsg: 'your are loged in already',
+    });
+  } else {
+    res.render('index', { qr: qrCodeImage, hide: '', errmsg: '' });
+  }
+});
+
+app.listen(PORT, () => console.log('Server is running on port ' + PORT));
