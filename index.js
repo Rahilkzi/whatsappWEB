@@ -25,38 +25,6 @@ async function sendMessage(message, content, image) {
   }
 }
 
-// Function to handle language translation
-async function translateMessage(message) {
-  const options = {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-      'X-RapidAPI-Key': '28a1aa8d66msh6d641cebad4d626p1c4f86jsn6d655bf181a3',
-      'X-RapidAPI-Host': 'text-translator2.p.rapidapi.com',
-    },
-    body: new URLSearchParams({
-      source_language: 'mr',
-      target_language: 'en',
-      text: message.body,
-    }),
-  };
-  const promise = fetch(url, options);
-  promise
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Request failed with status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then((data) => {
-      // console.log(data.data.translatedText);
-      message.reply(data.data.translatedText); // You can process the data here
-    })
-    .catch((error) => {
-      console.error(error); // Handle any errors here
-    });
-}
-
 // Load the session data
 const store = new SQLiteStore();
 
@@ -71,7 +39,7 @@ const client = new Client({
   },
 });
 
-const url = 'https://text-translator2.p.rapidapi.com/translate';
+
 let qrCodeImage = ''; // Define a variable to store the QR code image data URL
 
 client.initialize();
@@ -105,8 +73,8 @@ client.on('remote_session_saved', () => {
 });
 
 client.on('message', async (message) => {
-  message.getContact().then(async (chats) => {
-    if (chats.number === '919405013913') {
+  // message.getContact().then(async (chats) => {
+  //   if (chats.number === '919405013913') {
       try {
         if (message.body === '!ping') {
           await message.reply('pong');
@@ -126,13 +94,11 @@ client.on('message', async (message) => {
         const image = data.images[0];
 
         await sendMessage(message, content, image);
-
-        // await translateMessage(message);
       } catch (error) {
         console.error('Message Handling Error:', error.message);
       }
-    }
-  });
+  //   }
+  // });
 });
 
 const PORT = process.env.PORT || 3000;
